@@ -1,0 +1,63 @@
+/******************************************************************************
+ * File: Expression.strain
+ * Author: Keith Schwarz (htiek@cs.stanford.edu)
+ *
+ * A strain file to lex simple arithmetic expressions into their component
+ * strings.
+ *
+ * You can find the strain tool online at
+ *
+ *                     http://www.keithschwarz.com/strain/
+ */
+
+#include <string>
+#include <sstream>
+#include <stdexcept>
+using namespace std;
+
+/* Function: ValidateNumber(const string& number);
+ * Usage: ValidateNumber("137"); // No effect
+ *        ValidateNumber("10000000000000000000000000000"); // Throw exception
+ * ---------------------------------------------------------------------------
+ * Given a string representation of a number, returns whether that string can
+ * be converted into a valid integer.  If it cannot (i.e. it's too big or too
+ * small), throws an invalid_argument exception.
+ */
+void ValidateNumber(const string& number) {
+   /* Construct a stringstream to hold the number. */
+   stringstream converter(number);
+
+   /* Try reading out a number.  On failure, report an error. */
+   int result;
+   if (!(converter >> result))
+       throw invalid_argument("Number out of range: " + number);
+}
+
+%%
+
+/* No postamble code required. */
+
+%%
+Token: string
+%%
+\-[digit][digit]*
+   /* Explicitly negative number. */
+   ValidateNumber(TOKEN);
+   RETURN(Token, TOKEN);
+
+[digit][digit]*
+   /* Implicitly positive number. */
+   ValidateNumber(TOKEN);
+   RETURN(Token, TOKEN);
+
+\+[digit][digit]*
+   /* Explicitly positive number; drop the + before returning. */ 
+   ValidateNumber(TOKEN.substr(1));
+   RETURN(Token, TOKEN.substr(1));
+
+\+|\-|\*|\/|\%
+   /* Operators come back "as-is." */
+   RETURN (Token, TOKEN);
+
+[space][space]*
+   /* Take no action; we just want to skip spaces. */
